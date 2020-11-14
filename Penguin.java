@@ -183,8 +183,21 @@ public class Penguin {
 	/** Timer listener that handles animations. */
 	private static class UpdateTimerHandler implements ActionListener {
 		public void actionPerformed (ActionEvent event) {
-			// Move the backgrounds
-			for (int index = 0; index < 6; index++) {
+			// Move the clouds
+			for (int index = 4; index < 6; index++) {
+				// Only move is the count is division by the background speed
+				if (count % backgroundSpeeds[index] == 0) {
+					backgroundOffsets[index]++;
+					if (backgroundOffsets[index] >= MAX_X) {
+						backgroundOffsets[index] -= MAX_X;
+					}
+					leftBackgrounds[index].setLocation(-backgroundOffsets[index], 0);
+					rightBackgrounds[index].setLocation(MAX_X - backgroundOffsets[index], 0);
+				}
+			}
+
+			// Move the near backgrounds
+			for (int index = 0; index < 4; index++) {
 				// Only move is the count is division by the background speed
 				if (count % backgroundSpeeds[index] == 0) {
 					// Move right
