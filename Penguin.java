@@ -436,6 +436,11 @@ public class Penguin {
 				downDown = false;
 			}
 
+			// Another key was pressed.  Ignore it
+			else {
+				return;
+			}
+
 			// If the penguin is jumping, don't change the state
 			if (state == State.JUMPING) {
 			}
