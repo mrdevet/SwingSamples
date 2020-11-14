@@ -232,7 +232,7 @@ public class SideScroller {
 					if (count < 0.1 * JUMPING_MAX_COUNT) {
 						imageIndex = 0;
 					}
-					else if (count >= 0.1 * JUMPING_MAX_COUNT) {
+					else if (count >= 0.9 * JUMPING_MAX_COUNT) {
 						imageIndex = 2;
 					}
 
