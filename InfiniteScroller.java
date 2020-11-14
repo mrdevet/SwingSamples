@@ -3,7 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class SideScroller {
+public class InfiniteScroller {
 	/**
 	 * MAIN METHOD
 	 * This main method starts the GUI and runs the createMainWindow() method.
