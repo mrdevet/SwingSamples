@@ -23,42 +23,69 @@ public class SideScroller {
 	 * Declare the objects and variables that you want to access across
      * multiple methods.
 	 */
+
+	// Enumerated type that used to track the state the penguin is in.
+	private enum State {
+		STANDING,
+		WALKING,
+		SLIDING,
+		JUMPING
+	}
+
+	// Enumerated type used to store directions, both for movement and facing
+	private enum Direction {
+		NONE,
+		RIGHT,
+		LEFT
+	}
+
+	// Stores the frame and its size.
+	static JFrame frame;
 	static final int MAX_X = 1280;
 	static final int MAX_Y = 720;
 
+	// Store the background images, their current position and the speeds that they move.
 	static final int NUM_BACKGROUNDS = 8;
 	static JLabel [] leftBackgrounds;
 	static JLabel [] rightBackgrounds;
+	static int [] backgroundOffsets;
+	static int [] backgroundSpeeds = {1, 4, 5, 10, 5, 10, 0, 0};
 
+	// The penguin and the penguins default position
 	static JLabel penguin;
 	static final int PENGUIN_X = 604;
 	static final int PENGUIN_Y = 528;
 
-	static final int NUM_WALK_PENGUINS = 4;
-	static ImageIcon [] penguinWalkImages;
-	static ImageIcon [] penguinWalkImagesFlipped;
-	static final int PENGUIN_WALK_SPEED = 20;
-	static int penguinWalkIndex;
-	static boolean isWalking = false;
+	// The penguin images that could be put into the penguin label
+	static ImageIcon standingImage;
+	static ImageIcon standingImageFlipped;
+	static ImageIcon [] walkingImages;
+	static ImageIcon [] walkingImagesFlipped;
+	static ImageIcon slidingImage;
+	static ImageIcon slidingImageFlipped;
+	static ImageIcon [] jumpingImages;
+	static ImageIcon [] jumpingImagesFlipped;
+
+	// Stores the state and direction of the penguin
+	static State state = State.STANDING;
+	static Direction faceDirection = Direction.RIGHT;
+	static Direction moveDirection = Direction.NONE;
+
+	// Stores which of the arrow keys are currently down
 	static boolean leftDown = false;
 	static boolean rightDown = false;
-	static boolean directionRight = true;
+	static boolean upDown = false;
+	static boolean downDown = false;
 
-	static final int NUM_JUMP_PENGUINS = 4;
-	static ImageIcon [] penguinJumpImages;
-	static ImageIcon [] penguinJumpImagesFlipped;
+	// The frame delay
+	static final int UPDATE_DELAY = 10;
 
-	static final int UPDATE_SPEED = 10;
-	static final int MOVE_DISTANCE = 1;
-	static int [] backgroundOffsets;
-	static int [] backgroundSpeeds = {1, 4, 5, 10, 5, 10, 0, 0};
-	static boolean [] backgroundIndependents = {false, false, false, false, true, true, false, false};
-	static final int UPDATE_COUNT_MAX = 20;
-	static int updateCount = 0;
-
-	static boolean isJumping = false;
-	static boolean isJumpingForward = false;
-	static int jumpCount = 0;
+	// The frame counter and a maximum for the count for each state.
+	static int count = 0;
+	static final int STANDING_MAX_COUNT = 20;
+	static final int WALKING_MAX_COUNT = 80;
+	static final int SLIDING_MAX_COUNT = 200;
+	static final int JUMPING_MAX_COUNT = 200;
 
 
 	/**
@@ -67,7 +94,7 @@ public class SideScroller {
 	 */
 	private static void createMainWindow () {
 		// Create and set up the window.
-		JFrame frame = new JFrame ("Frame Title");
+		frame = new JFrame ("Frame Title");
 		frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		frame.setResizable (false);
 
@@ -91,26 +118,40 @@ public class SideScroller {
 		}
 		backgroundOffsets = new int [NUM_BACKGROUNDS];
 
-		// Add the penguin
-		penguinWalkImages = new ImageIcon [NUM_WALK_PENGUINS];
-		penguinWalkImagesFlipped = new ImageIcon [NUM_WALK_PENGUINS];
-		for (int index = 0; index < NUM_WALK_PENGUINS; index++) {
-			penguinWalkImages[index] = new ImageIcon("resources/penguins/penguin_walk0" + (index + 1) + ".png");
-			penguinWalkImagesFlipped[index] = new ImageIcon("resources/penguins/penguin_walk0" + (index + 1) + "_flip.png");
+		// Add the standing penguin images
+		standingImage = new ImageIcon("resources/penguins/penguin_walk01.png");
+		standingImageFlipped = new ImageIcon("resources/penguins/penguin_walk01_flip.png");
+
+		// Add the walking penguin images
+		walkingImages = new ImageIcon [4];
+		walkingImagesFlipped = new ImageIcon[4];
+		for (int index = 0; index < 3; index++) {
+			walkingImages[index] = new ImageIcon("resources/penguins/penguin_walk0" + (index + 2) + ".png");
+			walkingImagesFlipped[index] = new ImageIcon("resources/penguins/penguin_walk0" + (index + 2) + "_flip.png");
 		}
-		penguinJumpImages = new ImageIcon [NUM_JUMP_PENGUINS];
-		penguinJumpImagesFlipped = new ImageIcon [NUM_JUMP_PENGUINS];
-		for (int index = 0; index < NUM_JUMP_PENGUINS; index++) {
-			penguinJumpImages[index] = new ImageIcon("resources/penguins/penguin_jump0" + (index + 1) + ".png");
-			penguinJumpImagesFlipped[index] = new ImageIcon("resources/penguins/penguin_jump0" + (index + 1) + "_flip.png");
+		walkingImages[3] = new ImageIcon("resources/penguins/penguin_walk01.png");
+		walkingImagesFlipped[3] = new ImageIcon("resources/penguins/penguin_walk01_flip.png");
+
+		// Add the sliding penguin images
+		slidingImage = new ImageIcon("resources/penguins/penguin_slide02.png");
+		slidingImageFlipped = new ImageIcon("resources/penguins/penguin_slide02_flip.png");
+
+		// Add the jumping penguin images
+		jumpingImages = new ImageIcon [3];
+		jumpingImagesFlipped = new ImageIcon[3];
+		for (int index = 0; index < 3; index++) {
+			jumpingImages[index] = new ImageIcon("resources/penguins/penguin_jump0" + (index + 1) + ".png");
+			jumpingImagesFlipped[index] = new ImageIcon("resources/penguins/penguin_jump0" + (index + 1) + "_flip.png");
 		}
-		penguin = new JLabel(penguinWalkImages[0]);
+
+		// Add the penguin label
+		penguin = new JLabel(standingImage);
 		penguin.setSize(72, 64);
 		penguin.setLocation(PENGUIN_X, PENGUIN_Y);
 		contentPane.add(penguin);
 
 		// Start the update timer
-		Timer updateTimer = new Timer(UPDATE_SPEED, new UpdateTimerHandler());
+		Timer updateTimer = new Timer(UPDATE_DELAY, new UpdateTimerHandler());
 		updateTimer.start();
 
 		// Add the key listener
@@ -139,94 +180,274 @@ public class SideScroller {
      * key presses, timer expirations)
      */
 
-	/**  */
+	/** Timer listener that handles animations. */
 	private static class UpdateTimerHandler implements ActionListener {
 		public void actionPerformed (ActionEvent event) {
-			updateCount++;
-			if (updateCount == UPDATE_COUNT_MAX) {
-				updateCount = 0;
-			}
-			for (int index = 0; index < NUM_BACKGROUNDS; index++) {
-				if ((isWalking || backgroundIndependents[index]) && backgroundSpeeds[index] != 0 &&
-						updateCount % backgroundSpeeds[index] == 0) {
-					if (directionRight) {
+			// Move the backgrounds
+			for (int index = 0; index < 6; index++) {
+				// Only move is the count is division by the background speed
+				if (count % backgroundSpeeds[index] == 0) {
+					// Move right
+					if (moveDirection == Direction.RIGHT) {
 						backgroundOffsets[index]++;
+						if (backgroundOffsets[index] >= MAX_X) {
+							backgroundOffsets[index] -= MAX_X;
+						}
+						leftBackgrounds[index].setLocation(-backgroundOffsets[index], 0);
+						rightBackgrounds[index].setLocation(MAX_X - backgroundOffsets[index], 0);
 					}
-					else {
+
+					// Move left
+					else if (moveDirection == Direction.LEFT) {
 						backgroundOffsets[index]--;
+						if (backgroundOffsets[index] < 0) {
+							backgroundOffsets[index] += MAX_X;
+						}
+						leftBackgrounds[index].setLocation(-backgroundOffsets[index], 0);
+						rightBackgrounds[index].setLocation(MAX_X - backgroundOffsets[index], 0);
 					}
-					if (backgroundOffsets[index] >= MAX_X) {
-						backgroundOffsets[index] -= MAX_X;
-					}
-					else if (backgroundOffsets[index] < 0) {
-						backgroundOffsets[index] += MAX_X;
-					}
-					leftBackgrounds[index].setLocation(-backgroundOffsets[index], 0);
-					rightBackgrounds[index].setLocation(MAX_X - backgroundOffsets[index], 0);
-				}
-			}
-			if (updateCount % PENGUIN_WALK_SPEED == 0) {
-				if (isWalking) {
-					penguinWalkIndex++;
-					if (penguinWalkIndex == NUM_WALK_PENGUINS) {
-						penguinWalkIndex = 0;
-					}
-				}
-				else {
-					penguinWalkIndex = 0;
-				}
-				if (directionRight) {
-					penguin.setIcon(penguinWalkImages[penguinWalkIndex]);
-				}
-				else {
-					penguin.setIcon(penguinWalkImagesFlipped[penguinWalkIndex]);
 				}
 			}
 
+			// The penguin is jumping
+			if (state == State.JUMPING) {
+				// Set the height of the penguin
+				int y = (int) (0.0128 * count * (count - JUMPING_MAX_COUNT) + PENGUIN_Y);
+				penguin.setLocation(PENGUIN_X, y);
+
+				// If the down key is pressed, show the sliding image
+				if (downDown) {
+					if (faceDirection == Direction.RIGHT) {
+						penguin.setIcon(slidingImage);
+					}
+					else {
+						penguin.setIcon(slidingImageFlipped);
+					}
+				}
+
+				// Othersize, show one of the jumping images
+				else {
+					// Show different image for first 10% and last 10% of jump
+					int imageIndex = 1;
+					if (count < 0.1 * JUMPING_MAX_COUNT) {
+						imageIndex = 0;
+					}
+					else if (count >= 0.1 * JUMPING_MAX_COUNT) {
+						imageIndex = 2;
+					}
+
+					if (faceDirection == Direction.RIGHT) {
+						penguin.setIcon(jumpingImages[imageIndex]);
+					}
+					else {
+						penguin.setIcon(jumpingImagesFlipped[imageIndex]);
+					}
+				}
+
+				// Increase the counter
+				count++;
+
+				// If the counter reaches the max, change to an appropriate state
+				if (count == JUMPING_MAX_COUNT) {
+					if (downDown) {
+						state = State.SLIDING;
+					}
+					else if (leftDown || rightDown) {
+						state = State.WALKING;
+						moveDirection = faceDirection;
+					}
+					else {
+						state = State.STANDING;
+						moveDirection = Direction.NONE;
+					}
+					count = 0;
+				}
+			}
+
+			// The penguin is sliding
+			else if (state == State.SLIDING) {
+				// Show the sliding image
+				if (faceDirection == Direction.RIGHT) {
+					penguin.setIcon(slidingImage);
+				}
+				else {
+					penguin.setIcon(slidingImageFlipped);
+				}
+
+				// Increase the counter
+				count++;
+
+				// If the count reaches the max, stop moving.
+				if (count == SLIDING_MAX_COUNT) {
+					moveDirection = Direction.NONE;
+					count = 0;
+				}
+			}
+
+			// The penguin is walking
+			else if (state == State.WALKING) {
+				// Show one of the walking images
+				if (faceDirection == Direction.RIGHT) {
+					penguin.setIcon(walkingImages[count / 20]);
+				}
+				else {
+					penguin.setIcon(walkingImagesFlipped[count / 20]);
+				}
+
+				// Increase the counter
+				count++;
+
+				// If the count reaches the max, go back to 0
+				if (count == WALKING_MAX_COUNT) {
+					count = 0;
+				}
+			}
+
+			// The penguin is standing
+			else if (state == State.STANDING) {
+				// Show the standing image
+				if (faceDirection == Direction.RIGHT) {
+					penguin.setIcon(standingImage);
+				}
+				else {
+					penguin.setIcon(standingImageFlipped);
+				}
+
+				// Increase the counter
+				count++;
+
+				// If the count reaches the max, go back to 0
+				if (count == STANDING_MAX_COUNT) {
+					count = 0;
+				}
+			}
+
+			// Repaint and sync the frame for smooth animation
+			frame.repaint();
 			Toolkit.getDefaultToolkit().sync();
 		}
 	}
 
 
-	/**  */
+	/** Key listener that detects changes in the arrow keys. */
     private static class KeyHandler implements KeyListener {
         public void keyTyped (KeyEvent event) {
         }
 
         public void keyPressed (KeyEvent event) {
-			if (event.getKeyCode() == KeyEvent.VK_UP) {
-				isJumping = true;
-				isJumpingForward = isWalking;
-			}
-			else if (event.getKeyCode() == KeyEvent.VK_LEFT) {
+			int code = event.getKeyCode();
+
+			// The left arrow is pressed
+			if (code == KeyEvent.VK_LEFT && !leftDown) {
 				leftDown = true;
-				directionRight = false;
-				penguin.setIcon(penguinWalkImagesFlipped[penguinWalkIndex]);
+
+				// Face left
+				faceDirection = Direction.LEFT;
+
+				// If appropriate, change state to walking
+				if (state == State.STANDING || state == State.WALKING) {
+					state = State.WALKING;
+					moveDirection = Direction.LEFT;
+					count = 0;
+				}
 			}
-			else if (event.getKeyCode() == KeyEvent.VK_RIGHT) {
+
+			// The right arrow is pressed
+			else if (code == KeyEvent.VK_RIGHT && !rightDown) {
 				rightDown = true;
-				directionRight = true;
-				penguin.setIcon(penguinWalkImages[penguinWalkIndex]);
+
+				// Face right
+				faceDirection = Direction.RIGHT;
+
+				// If appropriate, change state to walking
+				if (state == State.STANDING || state == State.WALKING) {
+					state = State.WALKING;
+					moveDirection = Direction.RIGHT;
+					count = 0;
+				}
 			}
-			isWalking = leftDown || rightDown;
+
+			// The up arrow is pressed
+			else if (code == KeyEvent.VK_UP && !upDown) {
+				upDown = true;
+
+				// If not sliding or already jumping, change state to jumping
+				if (state != State.JUMPING && !downDown) {
+					state = State.JUMPING;
+					count = 0;
+				}
+			}
+
+			// The down arrow is pressed
+			else if (code == KeyEvent.VK_DOWN && !downDown) {
+				downDown = true;
+
+				// If not jumping, change state the sliding
+				if (state != State.JUMPING) {
+					state = State.SLIDING;
+					count = 0;
+				}
+			}
         }
 
         public void keyReleased (KeyEvent event) {
-			if (event.getKeyCode() == KeyEvent.VK_LEFT) {
+			int code = event.getKeyCode();
+
+			// The left arrow is released
+			if (code == KeyEvent.VK_LEFT) {
 				leftDown = false;
+
+				// If the right arrow is still down, change facing direction
 				if (rightDown) {
-					directionRight = true;
-					penguin.setIcon(penguinWalkImages[penguinWalkIndex]);
+					faceDirection = Direction.RIGHT;
 				}
 			}
-			else if (event.getKeyCode() == KeyEvent.VK_RIGHT) {
+
+			// The right arrow is released
+			else if (code == KeyEvent.VK_RIGHT) {
 				rightDown = false;
+
+				// If the left arrow is still down, change facing direction
 				if (leftDown) {
-					directionRight = false;
-					penguin.setIcon(penguinWalkImagesFlipped[penguinWalkIndex]);
+					faceDirection = Direction.LEFT;
 				}
 			}
-			isWalking = leftDown || rightDown;
+
+			// The up arrow is released
+			else if (code == KeyEvent.VK_UP) {
+				upDown = false;
+			}
+
+			// The down arrow is released
+			else if (code == KeyEvent.VK_DOWN) {
+				downDown = false;
+			}
+
+			// If the penguin is jumping, don't change the state
+			if (state == State.JUMPING) {
+			}
+
+			// If the down arrow is still pressed, change state to sliding
+			else if (downDown) {
+				if (state != state.SLIDING) {
+					state = State.SLIDING;
+					count = 0;
+				}
+			}
+
+			// If the left or right arrows are still pressed, change state to walking
+			else if (leftDown || rightDown) {
+				state = State.WALKING;
+				moveDirection = faceDirection;
+				count = 0;
+			}
+
+			// If no arrows are still pressed, change state to standing
+			else {
+				state = State.STANDING;
+				moveDirection = Direction.NONE;
+				count = 0;
+			}
         }
     }
 }
