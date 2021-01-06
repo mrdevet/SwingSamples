@@ -1,4 +1,4 @@
-// Import the GUI libraries
+// Import the GUI libraries 
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
