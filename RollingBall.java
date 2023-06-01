@@ -3,8 +3,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-// This is a comment!!!
-
 public class RollingBall {
 	/**
 	 * MAIN METHOD
